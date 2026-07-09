@@ -1,0 +1,56 @@
+upstream financial-api {
+  server ${BACKEND_HOST:-financial-api:8000};
+}
+
+server {
+  listen 8080;
+  server_name _;
+
+  root /usr/share/nginx/html;
+  index index.html;
+
+  location /health {
+    access_log off;
+    return 200 "healthy\n";
+    add_header Content-Type text/plain;
+  }
+
+  location /ready {
+    access_log off;
+    return 200 "ready\n";
+    add_header Content-Type text/plain;
+  }
+
+  location /api/ {
+    proxy_pass http://financial-api;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Correlation-ID $http_x_correlation_id;
+    proxy_read_timeout 15s;
+    proxy_connect_timeout 10s;
+    proxy_send_timeout 10s;
+
+    proxy_cache off;
+    expires off;
+  }
+
+  location /assets/config/app-config.json {
+    expires off;
+    add_header Cache-Control "no-cache, no-store, must-revalidate";
+  }
+
+  location ~* \.(?:css|js|map|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|eot)$ {
+    expires 1y;
+    add_header Cache-Control "public, immutable";
+    access_log off;
+  }
+
+  location / {
+    try_files $uri $uri/ /index.html;
+    expires -1;
+    add_header Cache-Control "no-cache, no-store, must-revalidate";
+  }
+}

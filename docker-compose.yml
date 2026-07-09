@@ -1,0 +1,55 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      BACKEND_API_BASE_URL: http://financial-api:8000/api
+      AWESOME_API_BASE_URL: https://economia.awesomeapi.com.br/json
+      BCB_API_BASE_URL: https://api.bcb.gov.br
+      MARKET_REFRESH_INTERVAL_MS: 3000
+      MACROECONOMIC_REFRESH_INTERVAL_MS: 21600000
+      REQUEST_TIMEOUT_MS: 10000
+    ports:
+      - "8080:8080"
+    depends_on:
+      financial-api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  financial-api:
+    build:
+      context: ./financial-api
+      dockerfile: Dockerfile
+    environment:
+      BRAPI_TOKEN: ${BRAPI_TOKEN}
+      AWESOME_API_BASE_URL: https://economia.awesomeapi.com.br/json
+      BCB_API_BASE_URL: https://api.bcb.gov.br
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  redis-data:

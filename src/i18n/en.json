@@ -1,0 +1,57 @@
+{
+  "dashboard": {
+    "title": "Financial Dashboard",
+    "currencies": "Currencies & Bitcoin",
+    "assets": "B3 Stocks & FIIs",
+    "macroeconomic": "Macroeconomic Indicators",
+    "loading": "Loading...",
+    "error": "Error",
+    "refresh": "Refresh Now",
+    "updated": "Updated",
+    "providerStatus": "Provider Status"
+  },
+  "currency": {
+    "bid": "Bid",
+    "ask": "Ask",
+    "high": "High",
+    "low": "Low",
+    "variation": "Variation",
+    "updated": "Updated"
+  },
+  "asset": {
+    "price": "Price",
+    "change": "Change",
+    "volume": "Volume",
+    "marketCap": "Market Cap",
+    "type": {
+      "STOCK": "Stock",
+      "FII": "FII",
+      "ETF": "ETF",
+      "BDR": "BDR",
+      "INDEX": "Index",
+      "UNKNOWN": "Unknown"
+    }
+  },
+  "macro": {
+    "current": "Current",
+    "reference": "Reference",
+    "selic": "Selic",
+    "ipca": "IPCA"
+  },
+  "provider": {
+    "AWESOME_API": "AwesomeAPI",
+    "BRAPI": "Brapi",
+    "BCB_SGS": "BCB SGS",
+    "AVAILABLE": "Available",
+    "DELAYED": "Delayed",
+    "RATE_LIMITED": "Rate Limited",
+    "UNAVAILABLE": "Unavailable",
+    "UNKNOWN": "Unknown"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "retry": "Retry",
+    "close": "Close"
+  }
+}

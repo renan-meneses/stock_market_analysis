@@ -1,0 +1,28 @@
+frontend:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+backend:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+autoscaling:
+  frontend:
+    enabled: false
+  backend:
+    enabled: false
+
+ingress:
+  enabled: false

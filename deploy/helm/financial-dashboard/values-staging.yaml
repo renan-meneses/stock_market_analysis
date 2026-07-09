@@ -1,0 +1,29 @@
+frontend:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+backend:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+autoscaling:
+  frontend:
+    enabled: false
+  backend:
+    enabled: false
+
+ingress:
+  enabled: true
+  hostname: staging.dashboard.example.com

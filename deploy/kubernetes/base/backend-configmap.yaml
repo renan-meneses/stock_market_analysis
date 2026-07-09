@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: financial-dashboard
+data:
+  AWESOME_API_BASE_URL: https://economia.awesomeapi.com.br/json
+  BCB_API_BASE_URL: https://api.bcb.gov.br
+  REDIS_URL: redis://redis:6379/0
+  PORT: "8000"

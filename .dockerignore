@@ -1,0 +1,11 @@
+node_modules
+.git
+.gitignore
+dist
+.env
+.env.*
+*.md
+.vscode
+e2e
+tests
+src/app/**/*.spec.ts

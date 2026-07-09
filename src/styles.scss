@@ -1,0 +1,26 @@
+/* Global styles - Stock Market Dashboard */
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+/* Utility classes */
+.text-up { color: #16a34a; }
+.text-down { color: #dc2626; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card-grid > * {
+  animation: fadeIn 0.3s ease-out;
+}

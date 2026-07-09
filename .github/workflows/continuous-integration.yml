@@ -1,0 +1,45 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run test:ci
+      - run: npm run build:production
+      - run: npm audit --audit-level=high || true
+
+  docker-validate:
+    name: Validate Docker Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t frontend-test --target build .
+      - run: docker build -t frontend-prod -f Dockerfile .
+      - run: docker build -t financial-api-test ./financial-api
+      - run: docker compose -f docker-compose.yml config
+
+  k8s-validate:
+    name: Validate Kubernetes Manifests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-kubectl@v4
+      - run: kubectl kustomize deploy/kubernetes/base > /dev/null
+      - run: kubectl kustomize deploy/kubernetes/overlays/development > /dev/null
+      - run: kubectl kustomize deploy/kubernetes/overlays/staging > /dev/null
+      - run: kubectl kustomize deploy/kubernetes/overlays/production > /dev/null

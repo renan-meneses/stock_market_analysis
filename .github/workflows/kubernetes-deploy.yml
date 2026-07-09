@@ -1,0 +1,40 @@
+name: Kubernetes Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        default: development
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+
+jobs:
+  deploy:
+    name: Deploy to ${{ github.event.inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/setup-kubectl@v4
+      - uses: azure/k8s-set-context@v4
+        with:
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Diff manifests
+        run: |
+          kubectl diff -k deploy/kubernetes/overlays/${{ github.event.inputs.environment }} || true
+
+      - name: Apply manifests
+        run: |
+          kubectl apply -k deploy/kubernetes/overlays/${{ github.event.inputs.environment }}
+
+      - name: Verify rollout
+        run: |
+          kubectl rollout status deployment/frontend -n financial-dashboard --timeout=5m
+          kubectl rollout status deployment/financial-api -n financial-dashboard --timeout=5m

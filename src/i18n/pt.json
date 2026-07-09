@@ -1,0 +1,57 @@
+{
+  "dashboard": {
+    "title": "Painel Financeiro",
+    "currencies": "Moedas e Bitcoin",
+    "assets": "Ações B3 e FIIs",
+    "macroeconomic": "Indicadores Macroeconômicos",
+    "loading": "Carregando...",
+    "error": "Erro",
+    "refresh": "Atualizar Agora",
+    "updated": "Atualizado",
+    "providerStatus": "Status dos Provedores"
+  },
+  "currency": {
+    "bid": "Compra",
+    "ask": "Venda",
+    "high": "Máxima",
+    "low": "Mínima",
+    "variation": "Variação",
+    "updated": "Atualizado"
+  },
+  "asset": {
+    "price": "Preço",
+    "change": "Variação",
+    "volume": "Volume",
+    "marketCap": "Valor de Mercado",
+    "type": {
+      "STOCK": "Ação",
+      "FII": "FII",
+      "ETF": "ETF",
+      "BDR": "BDR",
+      "INDEX": "Índice",
+      "UNKNOWN": "Desconhecido"
+    }
+  },
+  "macro": {
+    "current": "Atual",
+    "reference": "Referência",
+    "selic": "Selic",
+    "ipca": "IPCA"
+  },
+  "provider": {
+    "AWESOME_API": "AwesomeAPI",
+    "BRAPI": "Brapi",
+    "BCB_SGS": "BCB SGS",
+    "AVAILABLE": "Disponível",
+    "DELAYED": "Atrasado",
+    "RATE_LIMITED": "Limitado",
+    "UNAVAILABLE": "Indisponível",
+    "UNKNOWN": "Desconhecido"
+  },
+  "common": {
+    "loading": "Carregando...",
+    "error": "Erro",
+    "retry": "Tentar Novamente",
+    "close": "Fechar"
+  }
+}

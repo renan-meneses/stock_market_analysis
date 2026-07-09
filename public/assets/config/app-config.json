@@ -1,0 +1,9 @@
+{
+  "backendApiBaseUrl": "/api",
+  "awesomeApiBaseUrl": "https://economia.awesomeapi.com.br/json",
+  "bcbApiBaseUrl": "https://api.bcb.gov.br",
+  "marketRefreshIntervalMs": 3000,
+  "macroeconomicRefreshIntervalMs": 21600000,
+  "requestTimeoutMs": 10000,
+  "enableMockApi": false
+}

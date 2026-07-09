@@ -1,0 +1,15 @@
+services:
+  frontend:
+    ports:
+      - "8080:8080"
+    environment:
+      BACKEND_API_BASE_URL: http://localhost:8000/api
+
+  financial-api:
+    ports:
+      - "8000:8000"
+    environment:
+      BRAPI_TOKEN: ${BRAPI_TOKEN}
+    volumes:
+      - ./financial-api/src:/app/src
+    command: npx nodemon src/index.js
