@@ -16,7 +16,7 @@ export class MarketPollingService {
     return interval(this.marketIntervalMs).pipe(
       startWith(0),
       switchMap(() => {
-        this.dashboardService.refresh();
+        this.dashboardService.refreshAll();
         return new Subject<void>();
       })
     );

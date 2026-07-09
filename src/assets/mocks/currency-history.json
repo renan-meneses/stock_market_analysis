@@ -1,0 +1,5 @@
+[
+  { "symbol": "USD-BRL", "baseCurrency": "USD", "quoteCurrency": "BRL", "displayName": "Dólar Americano/Real Brasileiro", "bid": 5.85, "ask": 5.87, "high": 5.92, "low": 5.82, "absoluteChange": -0.03, "percentageChange": -0.51, "open": 5.88, "providerTimestamp": "2024-01-01 12:00:00", "synchronizedAt": "2024-01-01T12:00:00.000Z" },
+  { "symbol": "EUR-BRL", "baseCurrency": "EUR", "quoteCurrency": "BRL", "displayName": "Euro/Real Brasileiro", "bid": 6.42, "ask": 6.45, "high": 6.52, "low": 6.38, "absoluteChange": 0.04, "percentageChange": 0.63, "open": 6.41, "providerTimestamp": "2024-01-01 12:00:00", "synchronizedAt": "2024-01-01T12:00:00.000Z" },
+  { "symbol": "BTC-BRL", "baseCurrency": "BTC", "quoteCurrency": "BRL", "displayName": "Bitcoin/Real Brasileiro", "bid": 358000, "ask": 359500, "high": 362000, "low": 354000, "absoluteChange": 2500, "percentageChange": 0.70, "open": 356500, "providerTimestamp": "2024-01-01 12:00:00", "synchronizedAt": "2024-01-01T12:00:00.000Z" }
+]

@@ -17,7 +17,8 @@ export class BcbSgsAdapter implements MacroeconomicProvider {
   }
 
   getSeries(type: MacroeconomicIndicatorType, seriesCode: number): Observable<MacroeconomicIndicator> {
-    const url = `${this.config.getConfig().bcbApiBaseUrl}/dados/serie/bcdata.sgs.${seriesCode}/dados?formato=json`;
+    const endpoint = seriesCode === 11 ? 'selic' : 'ipca';
+    const url = `${this.config.getConfig().backendApiBaseUrl}/market/macroeconomic/${endpoint}`;
     return this.http.get<BcbSgsResponseItem[]>(url).pipe(
       map(items => mapBcbSgsResponse(type, seriesCode, items))
     );

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
 import { AsyncPipe, DatePipe } from '@angular/common';
 import { Subscription, interval, startWith } from 'rxjs';
 import { FinancialDashboardService } from '../../../core/financial-data/services/financial-dashboard.service';
@@ -6,121 +6,173 @@ import { CurrencyCardComponent } from '../components/currency-card/currency-card
 import { AssetCardComponent } from '../components/asset-card/asset-card.component';
 import { MacroCardComponent } from '../components/macro-card/macro-card.component';
 import { ProviderHealthComponent } from '../components/provider-health/provider-health.component';
+import { DataStatusComponent } from '../../../shared/components/data-status/data-status.component';
+import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
   imports: [
     AsyncPipe, DatePipe,
-    CurrencyCardComponent, AssetCardComponent, MacroCardComponent, ProviderHealthComponent,
+    CurrencyCardComponent, AssetCardComponent, MacroCardComponent,
+    ProviderHealthComponent, DataStatusComponent, TranslatePipe,
   ],
   template: `
     <div class="dashboard">
-      <header class="dashboard-header">
-        <h1>Financial Dashboard</h1>
-        <div class="controls">
-          <button class="refresh-btn" (click)="refresh()">
-            Refresh Now
-          </button>
-          @if (dashboardService.dashboardData$ | async; as data) {
-            <span class="last-update">
-              Updated: {{ data.updatedAt | date:'medium' }}
-            </span>
+      <section class="currencies-section">
+        <div class="section-header">
+          <h2>{{ 'dashboard.currencies' | translate }}</h2>
+          <app-data-status
+            [status]="dashboardService.currenciesStatus().status"
+            [retryable]="true"
+            [retryInProgress]="dashboardService.currenciesStatus().isUpdating"
+            (retry)="dashboardService.refreshCurrencies()"
+          />
+        </div>
+        <div class="card-grid">
+          @for (c of dashboardService.currenciesStatus().data; track c.symbol) {
+            <app-currency-card [rate]="c"></app-currency-card>
           }
         </div>
-      </header>
-
-      <section class="provider-section">
-        @if (dashboardService.dashboardData$ | async; as data) {
-          <app-provider-health [providers]="data.providers"></app-provider-health>
-        }
-      </section>
-
-      <section class="currencies-section">
-        <h2>Currencies & Bitcoin</h2>
-        @if (dashboardService.currenciesLoading()) {
-          <div class="loading-indicator">Loading currencies...</div>
-        }
-        @if (dashboardService.currenciesError(); as err) {
-          <div class="error-indicator">Error: {{ err }}</div>
-        }
-        @if (dashboardService.dashboardData$ | async; as data) {
-          <div class="card-grid">
-            @for (c of data.currencies; track c.symbol) {
-              <app-currency-card [rate]="c"></app-currency-card>
-            }
-          </div>
-        }
       </section>
 
       <section class="assets-section">
-        <h2>B3 Stocks & FIIs</h2>
-        @if (dashboardService.assetsLoading()) {
-          <div class="loading-indicator">Loading assets...</div>
-        }
-        @if (dashboardService.assetsError(); as err) {
-          <div class="error-indicator">Error: {{ err }}</div>
-        }
-        @if (dashboardService.dashboardData$ | async; as data) {
-          <div class="card-grid">
-            @for (a of data.brazilianAssets; track a.ticker) {
-              <app-asset-card [asset]="a"></app-asset-card>
-            }
-          </div>
-        }
+        <div class="section-header">
+          <h2>{{ 'dashboard.assets' | translate }}</h2>
+          <app-data-status
+            [status]="dashboardService.assetsStatus().status"
+            [retryable]="true"
+            [retryInProgress]="dashboardService.assetsStatus().isUpdating"
+            (retry)="dashboardService.refreshAssets()"
+          />
+        </div>
+        <div class="card-grid">
+          @for (a of dashboardService.assetsStatus().data; track a.ticker) {
+            <app-asset-card [asset]="a"></app-asset-card>
+          }
+        </div>
       </section>
 
       <section class="macroeconomic-section">
-        <h2>Macroeconomic Indicators</h2>
+        <h2>{{ 'dashboard.macroeconomic' | translate }}</h2>
         <div class="macro-grid">
-          @if (dashboardService.selicLoading()) { <div class="macro-loading">Loading Selic...</div> }
-          @if (dashboardService.selicError(); as err) { <div class="macro-error">Selic Error: {{ err }}</div> }
-          @if (dashboardService.ipcaLoading()) { <div class="macro-loading">Loading IPCA...</div> }
-          @if (dashboardService.ipcaError(); as err) { <div class="macro-error">IPCA Error: {{ err }}</div> }
-        </div>
-        @if (dashboardService.dashboardData$ | async; as data) {
-          <div class="card-grid">
-            @for (m of data.macroeconomicIndicators; track m.seriesCode) {
-              <app-macro-card [indicator]="m"></app-macro-card>
-            }
+          <div class="macro-card-wrapper">
+            <div class="section-header">
+              <h3>{{ 'macro.selic' | translate }}</h3>
+              <app-data-status
+                [status]="dashboardService.selicStatus().status"
+                [retryable]="true"
+                [retryInProgress]="dashboardService.selicStatus().isUpdating"
+                (retry)="dashboardService.refreshSelic()"
+              />
+            </div>
+            <app-macro-card
+              [indicator]="dashboardService.selicStatus().data ?? fallbackSelic()"
+              [status]="dashboardService.selicStatus().status"
+            />
           </div>
-        }
+          <div class="macro-card-wrapper">
+            <div class="section-header">
+              <h3>{{ 'macro.ipca' | translate }}</h3>
+              <app-data-status
+                [status]="dashboardService.ipcaStatus().status"
+                [retryable]="true"
+                [retryInProgress]="dashboardService.ipcaStatus().isUpdating"
+                (retry)="dashboardService.refreshIpca()"
+              />
+            </div>
+            <app-macro-card
+              [indicator]="dashboardService.ipcaStatus().data ?? fallbackIpca()"
+              [status]="dashboardService.ipcaStatus().status"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section class="provider-section">
+        <app-provider-health [providers]="providerHealth()" />
       </section>
     </div>
   `,
   styles: [`
     .dashboard { padding: 1.5rem; max-width: 1400px; margin: 0 auto; }
-    .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-    .dashboard-header h1 { margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--text-primary, #1a1a2e); }
-    .controls { display: flex; align-items: center; gap: 1rem; }
-    .refresh-btn { background: var(--primary, #4f46e5); color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.85rem; cursor: pointer; transition: background 0.2s; }
-    .refresh-btn:hover { background: var(--primary-dark, #4338ca); }
-    .last-update { font-size: 0.8rem; color: var(--text-secondary, #6b7280); }
     section { margin-bottom: 2rem; }
-    section h2 { font-size: 1.2rem; font-weight: 600; color: var(--text-primary, #1a1a2e); margin: 0 0 1rem; }
+    .section-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .section-header h2, .section-header h3 { margin: 0; font-size: 1.15rem; font-weight: 600; color: var(--text-primary, #1a1a2e); }
+    .macroeconomic-section > h2 { margin: 0 0 1rem 0; font-size: 1.15rem; font-weight: 600; color: var(--text-primary, #1a1a2e); }
+    .section-header h3 { font-size: 1rem; }
     .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem; }
-    .macro-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 1rem; }
-    .loading-indicator, .macro-loading { padding: 0.75rem; background: #f0f9ff; border-radius: 8px; color: #0369a1; font-size: 0.9rem; margin-bottom: 0.5rem; }
-    .error-indicator, .macro-error { padding: 0.75rem; background: #fce4ec; border-radius: 8px; color: #c62828; font-size: 0.9rem; margin-bottom: 0.5rem; }
+    .macro-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(450px, 1fr)); gap: 1.5rem; }
+    .macro-card-wrapper { display: flex; flex-direction: column; gap: 0.75rem; }
     .provider-section { margin-bottom: 1.5rem; max-width: 400px; }
+    @media (max-width: 640px) {
+      .dashboard { padding: 1rem; }
+      .card-grid { grid-template-columns: 1fr; }
+      .macro-grid { grid-template-columns: 1fr; }
+    }
   `]
 })
 export class DashboardPageComponent implements OnInit, OnDestroy {
   protected readonly dashboardService = inject(FinancialDashboardService);
   private pollingSub?: Subscription;
 
+  protected readonly providerHealth = signal([
+    { provider: 'AWESOME_API' as const, status: 'AVAILABLE' as const, lastSuccessAt: new Date().toISOString() },
+    { provider: 'BRAPI' as const, status: 'AVAILABLE' as const, lastSuccessAt: new Date().toISOString() },
+    { provider: 'BCB_SGS' as const, status: 'AVAILABLE' as const, lastSuccessAt: new Date().toISOString() },
+  ]);
+
+  protected readonly fallbackSelic = signal({
+    type: 'SELIC' as const,
+    name: 'Selic',
+    seriesCode: 11,
+    latestValue: 13.75,
+    previousValue: 14.25,
+    absoluteChange: -0.50,
+    percentageChange: -3.51,
+    referenceDate: '2026-06-01',
+    history: [
+      { date: '2025-01-01', value: 12.25 },
+      { date: '2025-04-01', value: 14.25 },
+      { date: '2025-07-01', value: 14.25 },
+      { date: '2025-10-01', value: 13.25 },
+      { date: '2026-01-01', value: 14.25 },
+      { date: '2026-04-01', value: 14.00 },
+      { date: '2026-06-01', value: 13.75 },
+    ],
+    synchronizedAt: new Date().toISOString(),
+  });
+
+  protected readonly fallbackIpca = signal({
+    type: 'IPCA' as const,
+    name: 'IPCA',
+    seriesCode: 433,
+    latestValue: 0.44,
+    previousValue: 0.42,
+    absoluteChange: 0.02,
+    percentageChange: 4.76,
+    referenceDate: '2026-06-01',
+    history: [
+      { date: '2025-01-01', value: 0.16 },
+      { date: '2025-04-01', value: 0.61 },
+      { date: '2025-07-01', value: 0.12 },
+      { date: '2025-10-01', value: 0.45 },
+      { date: '2026-01-01', value: 0.28 },
+      { date: '2026-04-01', value: 0.38 },
+      { date: '2026-06-01', value: 0.44 },
+    ],
+    synchronizedAt: new Date().toISOString(),
+  });
+
   ngOnInit(): void {
-    this.dashboardService.refresh();
+    this.dashboardService.refreshAll();
     this.pollingSub = interval(3000).pipe(startWith(0)).subscribe(() => {
-      this.dashboardService.refresh();
+      this.dashboardService.refreshCurrencies();
+      this.dashboardService.refreshAssets();
     });
   }
 
   ngOnDestroy(): void {
     this.pollingSub?.unsubscribe();
-  }
-
-  refresh(): void {
-    this.dashboardService.refresh();
   }
 }

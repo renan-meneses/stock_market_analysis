@@ -1,0 +1,12 @@
+[
+  { "ticker": "PETR4", "name": "Petrobras PN", "assetType": "STOCK", "currency": "BRL", "exchange": "B3", "currentPrice": 38.50, "change": 0.35, "changePercent": 0.92, "volume": 45000000, "marketCap": 500000000000 },
+  { "ticker": "VALE3", "name": "Vale ON", "assetType": "STOCK", "currency": "BRL", "exchange": "B3", "currentPrice": 64.20, "change": -0.80, "changePercent": -1.23, "volume": 32000000, "marketCap": 330000000000 },
+  { "ticker": "ITUB4", "name": "Itaú Unibanco PN", "assetType": "STOCK", "currency": "BRL", "exchange": "B3", "currentPrice": 35.80, "change": 0.15, "changePercent": 0.42, "volume": 18000000, "marketCap": 350000000000 },
+  { "ticker": "BBDC4", "name": "Bradesco PN", "assetType": "STOCK", "currency": "BRL", "exchange": "B3", "currentPrice": 14.25, "change": -0.10, "changePercent": -0.70, "volume": 25000000, "marketCap": 150000000000 },
+  { "ticker": "BBAS3", "name": "Banco do Brasil ON", "assetType": "STOCK", "currency": "BRL", "exchange": "B3", "currentPrice": 56.90, "change": 0.50, "changePercent": 0.89, "volume": 12000000, "marketCap": 160000000000 },
+  { "ticker": "WEGE3", "name": "WEG ON", "assetType": "STOCK", "currency": "BRL", "exchange": "B3", "currentPrice": 42.30, "change": 0.65, "changePercent": 1.56, "volume": 8000000, "marketCap": 180000000000 },
+  { "ticker": "MGLU3", "name": "Magazine Luiza ON", "assetType": "STOCK", "currency": "BRL", "exchange": "B3", "currentPrice": 12.15, "change": 0.80, "changePercent": 7.05, "volume": 35000000, "marketCap": 8000000000 },
+  { "ticker": "HGLG11", "name": "CSHG Real Estate FII", "assetType": "FII", "currency": "BRL", "exchange": "B3", "currentPrice": 175.50, "change": 1.20, "changePercent": 0.69, "volume": 1500000, "marketCap": 8000000000 },
+  { "ticker": "KNRI11", "name": "Kinea Renda Imobiliária FII", "assetType": "FII", "currency": "BRL", "exchange": "B3", "currentPrice": 152.80, "change": -0.50, "changePercent": -0.33, "volume": 1200000, "marketCap": 7500000000 },
+  { "ticker": "MXRF11", "name": "Maxi Renda FII", "assetType": "FII", "currency": "BRL", "exchange": "B3", "currentPrice": 105.20, "change": 0.30, "changePercent": 0.29, "volume": 2000000, "marketCap": 5000000000 }
+]

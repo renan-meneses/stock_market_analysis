@@ -11,11 +11,19 @@ const INDICATOR_NAMES: Record<MacroeconomicIndicatorType, string> = {
 };
 
 function parseBcbDate(dateStr: string): string {
+  if (!dateStr) return '';
   const parts = dateStr.split('/');
   if (parts.length === 3) {
     return `${parts[2]}-${parts[1]}-${parts[0]}`;
   }
   return dateStr;
+}
+
+export function sanitizeChartSeries(points: MacroeconomicDataPoint[]): MacroeconomicDataPoint[] {
+  return points.filter(p =>
+    Number.isFinite(p.value) &&
+    Boolean(p.date)
+  );
 }
 
 export function mapBcbSgsResponse(
@@ -24,10 +32,12 @@ export function mapBcbSgsResponse(
   items: BcbSgsResponseItem[]
 ): MacroeconomicIndicator {
   const now = new Date().toISOString();
-  const history: MacroeconomicDataPoint[] = items.map(item => ({
-    date: parseBcbDate(item.data),
-    value: parseFloat(item.valor) || 0,
-  }));
+  const history: MacroeconomicDataPoint[] = (items || [])
+    .map(item => ({
+      date: parseBcbDate(item?.data || ''),
+      value: parseFloat(item?.valor) || 0,
+    }))
+    .filter(p => p.date);
 
   history.sort((a, b) => a.date.localeCompare(b.date));
 
@@ -38,7 +48,7 @@ export function mapBcbSgsResponse(
     type,
     name: INDICATOR_NAMES[type],
     seriesCode,
-    latestValue: latest?.value || 0,
+    latestValue: latest?.value ?? 0,
     previousValue: previous?.value,
     absoluteChange: latest && previous ? latest.value - previous.value : undefined,
     percentageChange: latest && previous && previous.value !== 0

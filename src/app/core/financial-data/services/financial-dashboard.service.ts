@@ -1,74 +1,153 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { Observable, forkJoin, of, Subject } from 'rxjs';
-import { map, catchError, switchMap, startWith, tap, shareReplay } from 'rxjs/operators';
+import { Observable, of, catchError, map } from 'rxjs';
 import { FinancialDataRepository } from '../repositories/financial-data.repository';
 import { FinancialDashboardData } from '../models/financial-dashboard-data.model';
 import { ExchangeRate } from '../models/exchange-rate.model';
 import { BrazilianMarketAsset } from '../models/brazilian-market-asset.model';
 import { MacroeconomicIndicator } from '../models/macroeconomic-indicator.model';
-import { ProviderHealth } from '../models/provider-health.model';
+import { ChartViewModel, DataStatus, MARKET_CACHE_KEYS } from '../../../core/models/data-status.model';
+import { LastKnownDataStoreService } from '../../../core/services/last-known-data-store.service';
 
 @Injectable({ providedIn: 'root' })
 export class FinancialDashboardService {
   private readonly repository = inject(FinancialDataRepository);
+  private readonly store = inject(LastKnownDataStoreService);
 
-  readonly currenciesLoading = signal(true);
-  readonly assetsLoading = signal(true);
-  readonly selicLoading = signal(true);
-  readonly ipcaLoading = signal(true);
+  readonly currenciesStatus = signal<ChartViewModel<ExchangeRate[]>>({
+    data: [], status: 'LOADING', isUpdating: false,
+  });
+  readonly assetsStatus = signal<ChartViewModel<BrazilianMarketAsset[]>>({
+    data: [], status: 'LOADING', isUpdating: false,
+  });
+  readonly selicStatus = signal<ChartViewModel<MacroeconomicIndicator | null>>({
+    data: null, status: 'LOADING', isUpdating: false,
+  });
+  readonly ipcaStatus = signal<ChartViewModel<MacroeconomicIndicator | null>>({
+    data: null, status: 'LOADING', isUpdating: false,
+  });
 
-  readonly currenciesError = signal<string | null>(null);
-  readonly assetsError = signal<string | null>(null);
-  readonly selicError = signal<string | null>(null);
-  readonly ipcaError = signal<string | null>(null);
+  readonly dashboardData$: Observable<FinancialDashboardData>;
 
-  private refreshTrigger = new Subject<void>();
+  constructor() {
+    this.loadInitialFromCache();
+    this.dashboardData$ = of({} as FinancialDashboardData);
+  }
 
-  readonly dashboardData$: Observable<FinancialDashboardData> = this.refreshTrigger.pipe(
-    startWith(undefined as void),
-    switchMap(() => forkJoin({
-      currencies: this.repository.getCurrencies().pipe(
-        tap({ next: () => { this.currenciesLoading.set(false); this.currenciesError.set(null); }, error: (e) => { this.currenciesLoading.set(false); this.currenciesError.set(e?.message || 'Error'); } }),
-        catchError(err => { this.currenciesLoading.set(false); this.currenciesError.set(err?.message || 'Error'); return of([] as ExchangeRate[]); })
-      ),
-      brazilianAssets: this.repository.getBrazilianAssets().pipe(
-        tap({ next: () => { this.assetsLoading.set(false); this.assetsError.set(null); }, error: (e) => { this.assetsLoading.set(false); this.assetsError.set(e?.message || 'Error'); } }),
-        catchError(err => { this.assetsLoading.set(false); this.assetsError.set(err?.message || 'Error'); return of([] as BrazilianMarketAsset[]); })
-      ),
-      selic: this.repository.getSelic().pipe(
-        tap({ next: () => { this.selicLoading.set(false); this.selicError.set(null); }, error: (e) => { this.selicLoading.set(false); this.selicError.set(e?.message || 'Error'); } }),
-        catchError(err => { this.selicLoading.set(false); this.selicError.set(err?.message || 'Error'); return of({} as MacroeconomicIndicator); })
-      ),
-      ipca: this.repository.getIpca().pipe(
-        tap({ next: () => { this.ipcaLoading.set(false); this.ipcaError.set(null); }, error: (e) => { this.ipcaLoading.set(false); this.ipcaError.set(e?.message || 'Error'); } }),
-        catchError(err => { this.ipcaLoading.set(false); this.ipcaError.set(err?.message || 'Error'); return of({} as MacroeconomicIndicator); })
-      ),
-    })),
-    map(({ currencies, brazilianAssets, selic, ipca }) => {
-      const providers: ProviderHealth[] = [
-        { provider: 'AWESOME_API', status: currencies.length > 0 ? 'AVAILABLE' : 'UNAVAILABLE', lastSuccessAt: new Date().toISOString() },
-        { provider: 'BRAPI', status: brazilianAssets.length > 0 ? 'AVAILABLE' : 'UNAVAILABLE', lastSuccessAt: new Date().toISOString() },
-        { provider: 'BCB_SGS', status: selic?.latestValue != null ? 'AVAILABLE' : 'UNAVAILABLE', lastSuccessAt: new Date().toISOString() },
-      ];
-      const indicators: MacroeconomicIndicator[] = [];
-      if (selic?.latestValue != null) indicators.push(selic);
-      if (ipca?.latestValue != null) indicators.push(ipca);
-      return {
-        currencies,
-        brazilianAssets,
-        macroeconomicIndicators: indicators,
-        updatedAt: new Date().toISOString(),
-        providers,
-      };
-    }),
-    shareReplay(1)
-  );
+  private loadInitialFromCache(): void {
+    const cachedCurrencies = this.store.get<ExchangeRate[]>(MARKET_CACHE_KEYS.currencies);
+    if (cachedCurrencies?.length) {
+      this.currenciesStatus.set({ data: cachedCurrencies, status: 'STALE', isUpdating: false, message: 'Showing cached data' });
+    }
+    const cachedAssets = this.store.get<BrazilianMarketAsset[]>(MARKET_CACHE_KEYS.b3Assets);
+    if (cachedAssets?.length) {
+      this.assetsStatus.set({ data: cachedAssets, status: 'STALE', isUpdating: false, message: 'Showing cached data' });
+    }
+    const cachedSelic = this.store.get<MacroeconomicIndicator>(MARKET_CACHE_KEYS.selic);
+    if (cachedSelic?.latestValue != null) {
+      this.selicStatus.set({ data: cachedSelic, status: 'STALE', isUpdating: false, message: 'Showing cached data' });
+    }
+    const cachedIpca = this.store.get<MacroeconomicIndicator>(MARKET_CACHE_KEYS.ipca);
+    if (cachedIpca?.latestValue != null) {
+      this.ipcaStatus.set({ data: cachedIpca, status: 'STALE', isUpdating: false, message: 'Showing cached data' });
+    }
+  }
 
-  refresh(): void {
-    this.currenciesLoading.set(true);
-    this.assetsLoading.set(true);
-    this.selicLoading.set(true);
-    this.ipcaLoading.set(true);
-    this.refreshTrigger.next();
+  refreshCurrencies(): void {
+    this.currenciesStatus.update(s => ({ ...s, isUpdating: true }));
+    this.repository.getCurrencies().pipe(
+      map(data => {
+        if (data?.length) {
+          this.store.set(MARKET_CACHE_KEYS.currencies, data);
+          this.currenciesStatus.set({
+            data, status: 'LIVE', isUpdating: false,
+            lastSuccessfulUpdate: new Date().toISOString(),
+          });
+        }
+      }),
+      catchError(() => {
+        this.currenciesStatus.update(s => ({
+          ...s, isUpdating: false,
+          status: (s.data?.length ? 'STALE' : 'FALLBACK') as DataStatus,
+          message: 'Live data is temporarily unavailable',
+        }));
+        return of(null);
+      })
+    ).subscribe();
+  }
+
+  refreshAssets(): void {
+    this.assetsStatus.update(s => ({ ...s, isUpdating: true }));
+    this.repository.getBrazilianAssets().pipe(
+      map(data => {
+        if (data?.length) {
+          this.store.set(MARKET_CACHE_KEYS.b3Assets, data);
+          this.assetsStatus.set({
+            data, status: 'LIVE', isUpdating: false,
+            lastSuccessfulUpdate: new Date().toISOString(),
+          });
+        }
+      }),
+      catchError(() => {
+        this.assetsStatus.update(s => ({
+          ...s, isUpdating: false,
+          status: (s.data?.length ? 'STALE' : 'FALLBACK') as DataStatus,
+          message: 'Live data is temporarily unavailable',
+        }));
+        return of(null);
+      })
+    ).subscribe();
+  }
+
+  refreshSelic(): void {
+    this.selicStatus.update(s => ({ ...s, isUpdating: true }));
+    this.repository.getSelic().pipe(
+      map(data => {
+        if (data?.latestValue != null) {
+          this.store.set(MARKET_CACHE_KEYS.selic, data);
+          this.selicStatus.set({
+            data, status: 'LIVE', isUpdating: false,
+            lastSuccessfulUpdate: new Date().toISOString(),
+          });
+        }
+      }),
+      catchError(() => {
+        this.selicStatus.update(s => ({
+          ...s, isUpdating: false,
+          status: (s.data?.latestValue != null ? 'STALE' : 'FALLBACK') as DataStatus,
+          message: 'Live data is temporarily unavailable',
+        }));
+        return of(null);
+      })
+    ).subscribe();
+  }
+
+  refreshIpca(): void {
+    this.ipcaStatus.update(s => ({ ...s, isUpdating: true }));
+    this.repository.getIpca().pipe(
+      map(data => {
+        if (data?.latestValue != null) {
+          this.store.set(MARKET_CACHE_KEYS.ipca, data);
+          this.ipcaStatus.set({
+            data, status: 'LIVE', isUpdating: false,
+            lastSuccessfulUpdate: new Date().toISOString(),
+          });
+        }
+      }),
+      catchError(() => {
+        this.ipcaStatus.update(s => ({
+          ...s, isUpdating: false,
+          status: (s.data?.latestValue != null ? 'STALE' : 'FALLBACK') as DataStatus,
+          message: 'Live data is temporarily unavailable',
+        }));
+        return of(null);
+      })
+    ).subscribe();
+  }
+
+  refreshAll(): void {
+    this.refreshCurrencies();
+    this.refreshAssets();
+    this.refreshSelic();
+    this.refreshIpca();
   }
 }

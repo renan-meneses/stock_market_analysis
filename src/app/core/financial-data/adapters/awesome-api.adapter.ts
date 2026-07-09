@@ -17,7 +17,7 @@ export class AwesomeApiAdapter implements CurrencyProvider {
   }
 
   getLatestRates(): Observable<ExchangeRate[]> {
-    const url = `${this.config.getConfig().awesomeApiBaseUrl}/last/USD-BRL,EUR-BRL,BTC-BRL`;
+    const url = `${this.config.getConfig().backendApiBaseUrl}/market/currencies`;
     return this.http.get<AwesomeApiResponse>(url).pipe(
       map(response => mapAwesomeApiResponse(response))
     );
